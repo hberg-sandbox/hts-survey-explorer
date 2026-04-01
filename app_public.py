@@ -130,56 +130,49 @@ PROFESSIONAL_CSS = f"""
         box-shadow: 0 0 0 3px rgba(25, 140, 236, 0.1) !important;
     }}
 
-    /* Radio Button Styling - Simple and Clean */
+    /* Radio Button Styling */
+    [data-baseweb="radio"] {{
+        color: {DesignSystem.TEXT_PRIMARY} !important;
+    }}
+
     [data-baseweb="radio"] label {{
         color: {DesignSystem.TEXT_PRIMARY} !important;
         font-size: 0.875rem !important;
+        padding: 0.375rem 0 !important;
     }}
 
-    /* Selected radio button - make circle visible */
+    [data-baseweb="radio"] > div:first-child {{
+        background-color: {DesignSystem.BACKGROUND} !important;
+        border: 2px solid #CBD5E1 !important;
+    }}
+
+    [data-baseweb="radio"]:hover > div:first-child {{
+        border-color: {DesignSystem.PRIMARY_BLUE} !important;
+    }}
+
     [data-baseweb="radio"] input:checked ~ div:first-child {{
-        background-color: #000000 !important;
-        border-color: #000000 !important;
+        background-color: {DesignSystem.PRIMARY_BLUE} !important;
+        border-color: {DesignSystem.PRIMARY_BLUE} !important;
     }}
 
-    /* Make selected radio option visible with highlighting */
+    /* Make selected radio option more visible */
     [data-baseweb="radio"][aria-checked="true"] {{
-        background-color: #E8F4FD !important;
+        background-color: #E0F2FE !important;
         padding: 0.25rem 0.5rem !important;
         border-radius: 0.375rem !important;
-        border-left: 3px solid #000000 !important;
+        border-left: 3px solid {DesignSystem.PRIMARY_BLUE} !important;
     }}
 
     [data-baseweb="radio"][aria-checked="true"] label {{
-        color: #000000 !important;
-        font-weight: 700 !important;
+        color: #0C4A6E !important;
+        font-weight: 600 !important;
     }}
 
-    /* Selectbox Dropdown - Show full question text */
-    [data-baseweb="select"] {{
-        max-width: 100% !important;
-    }}
-
-    [data-baseweb="select"] [data-baseweb="menu"] {{
-        max-width: 600px !important;
-        white-space: normal !important;
-    }}
-
-    [data-baseweb="select"] li {{
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        padding: 8px 12px !important;
-        line-height: 1.4 !important;
-    }}
-
-    /* Show full text in dropdown options */
-    div[data-baseweb="popover"] {{
-        max-width: 90vw !important;
-    }}
-
-    div[data-baseweb="popover"] li {{
-        white-space: normal !important;
-        word-wrap: break-word !important;
+    /* Additional styling for radio group container to highlight selection */
+    .stRadio > div[role="radiogroup"] > label[data-baseweb="radio"][aria-checked="true"] {{
+        background-color: #E0F2FE !important;
+        margin-left: -0.5rem !important;
+        padding-left: 0.75rem !important;
     }}
 
     /* Multi-select Styling */
@@ -339,7 +332,6 @@ PROFESSIONAL_CSS = f"""
         color: {DesignSystem.TEXT_PRIMARY};
         word-break: break-all;
     }}
-
 </style>
 """
 
@@ -596,8 +588,7 @@ def main():
 
         for idx, q in enumerate(data):
             sheet = q['sheet']
-            # Show full question text without truncation
-            formatted = f"{sheet}: {q['question']}"
+            formatted = f"{sheet}: {q['question'][:50]}..."
 
             if sheet.startswith('P'):
                 question_groups["Profile Questions"].append((idx, formatted, sheet))
@@ -781,10 +772,6 @@ def main():
             # Filter responses for chart (show all by default, except hidden)
             selected_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
 
-            # Show status if responses are hidden
-            if st.session_state.hidden_responses:
-                st.info(f"📊 Showing {len(selected_responses)} of {len(all_responses)} responses ({len(st.session_state.hidden_responses)} hidden)")
-
             # Chart (display first)
             if selected_responses:
                 fig = create_chart(
@@ -810,31 +797,31 @@ def main():
             col_hide1, col_hide2, col_hide3 = st.columns(3)
 
             with col_hide1:
-                # Check for NET responses (including "NET:" format)
-                net_responses = [r for r in all_responses if 'net:' in r.lower() or 'net ' in r.lower() or 'total' in r.lower() or r.lower().startswith('net')]
+                # Check for NET responses
+                net_responses = [r for r in all_responses if 'net' in r.lower() or 'total' in r.lower()]
                 if net_responses:
-                    if st.button(f"Hide NET/Total ({len(net_responses)})", key=f"hide_net_{current_question['sheet']}"):
-                        for resp in net_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                    if st.checkbox("Hide NET/Total responses", key="hide_net"):
+                        st.session_state.hidden_responses.update(net_responses)
+                    else:
+                        st.session_state.hidden_responses -= set(net_responses)
 
             with col_hide2:
                 # Check for Don't Know / Not Sure responses
                 dk_responses = [r for r in all_responses if any(x in r.lower() for x in ["don't know", "not sure", "no opinion", "n/a"])]
                 if dk_responses:
-                    if st.button(f"Hide DK/NA ({len(dk_responses)})", key=f"hide_dk_{current_question['sheet']}"):
-                        for resp in dk_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                    if st.checkbox("Hide DK/NA responses", key="hide_dk"):
+                        st.session_state.hidden_responses.update(dk_responses)
+                    else:
+                        st.session_state.hidden_responses -= set(dk_responses)
 
             with col_hide3:
                 # Check for Other responses - aligned left
                 other_responses = [r for r in all_responses if 'other' in r.lower()]
                 if other_responses:
-                    if st.button(f"Hide Other ({len(other_responses)})", key=f"hide_other_{current_question['sheet']}"):
-                        for resp in other_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                    if st.checkbox("Hide 'Other' responses", key="hide_other"):
+                        st.session_state.hidden_responses.update(other_responses)
+                    else:
+                        st.session_state.hidden_responses -= set(other_responses)
 
             # Allow custom exclusions
             with st.expander("🚫 Hide Specific Responses"):
@@ -843,18 +830,18 @@ def main():
                 # Get currently visible responses
                 visible_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
 
-                # Dropdown to select and hide individual responses
-                if visible_responses:
-                    response_to_hide = st.selectbox(
-                        "Select a response to hide:",
-                        options=["-- Select response --"] + visible_responses,
-                        key=f"select_hide_{current_question['sheet']}"
-                    )
+                # Multiselect to hide specific items
+                responses_to_hide = st.multiselect(
+                    "Click responses to hide them",
+                    options=visible_responses,
+                    default=[],
+                    key="hide_specific",
+                    help="Select any responses you want to remove from the chart"
+                )
 
-                    if response_to_hide != "-- Select response --":
-                        if st.button(f"Hide '{response_to_hide}'", key=f"hide_btn_{response_to_hide}"):
-                            st.session_state.hidden_responses.add(response_to_hide)
-                            st.rerun()
+                # Update hidden responses
+                if responses_to_hide:
+                    st.session_state.hidden_responses.update(responses_to_hide)
 
                 # Show what's currently hidden
                 if st.session_state.hidden_responses:

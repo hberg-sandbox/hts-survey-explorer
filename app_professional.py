@@ -4,13 +4,11 @@ import plotly.graph_objects as go
 import pandas as pd
 from typing import Dict, List, Tuple, Optional
 import re
-import hashlib
-from urllib.parse import urlencode
 
 # Page configuration - MUST be first Streamlit command
 st.set_page_config(
-    page_title="HTS Survey Explorer",
-    page_icon="📊",
+    page_title="Hopper Survey Explorer",
+    page_icon="✈️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -130,56 +128,29 @@ PROFESSIONAL_CSS = f"""
         box-shadow: 0 0 0 3px rgba(25, 140, 236, 0.1) !important;
     }}
 
-    /* Radio Button Styling - Simple and Clean */
+    /* Radio Button Styling */
+    [data-baseweb="radio"] {{
+        color: {DesignSystem.TEXT_PRIMARY} !important;
+    }}
+
     [data-baseweb="radio"] label {{
         color: {DesignSystem.TEXT_PRIMARY} !important;
         font-size: 0.875rem !important;
+        padding: 0.375rem 0 !important;
     }}
 
-    /* Selected radio button - make circle visible */
+    [data-baseweb="radio"] > div:first-child {{
+        background-color: {DesignSystem.BACKGROUND} !important;
+        border: 2px solid #CBD5E1 !important;
+    }}
+
+    [data-baseweb="radio"]:hover > div:first-child {{
+        border-color: {DesignSystem.PRIMARY_BLUE} !important;
+    }}
+
     [data-baseweb="radio"] input:checked ~ div:first-child {{
-        background-color: #000000 !important;
-        border-color: #000000 !important;
-    }}
-
-    /* Make selected radio option visible with highlighting */
-    [data-baseweb="radio"][aria-checked="true"] {{
-        background-color: #E8F4FD !important;
-        padding: 0.25rem 0.5rem !important;
-        border-radius: 0.375rem !important;
-        border-left: 3px solid #000000 !important;
-    }}
-
-    [data-baseweb="radio"][aria-checked="true"] label {{
-        color: #000000 !important;
-        font-weight: 700 !important;
-    }}
-
-    /* Selectbox Dropdown - Show full question text */
-    [data-baseweb="select"] {{
-        max-width: 100% !important;
-    }}
-
-    [data-baseweb="select"] [data-baseweb="menu"] {{
-        max-width: 600px !important;
-        white-space: normal !important;
-    }}
-
-    [data-baseweb="select"] li {{
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        padding: 8px 12px !important;
-        line-height: 1.4 !important;
-    }}
-
-    /* Show full text in dropdown options */
-    div[data-baseweb="popover"] {{
-        max-width: 90vw !important;
-    }}
-
-    div[data-baseweb="popover"] li {{
-        white-space: normal !important;
-        word-wrap: break-word !important;
+        background-color: {DesignSystem.PRIMARY_BLUE} !important;
+        border-color: {DesignSystem.PRIMARY_BLUE} !important;
     }}
 
     /* Multi-select Styling */
@@ -286,6 +257,16 @@ PROFESSIONAL_CSS = f"""
         margin-top: 1.5rem;
     }}
 
+    /* Footer */
+    .app-footer {{
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #E2E8F0;
+        font-size: 0.875rem;
+        color: {DesignSystem.TEXT_MUTED};
+        text-align: center;
+    }}
+
     /* Expander Styling */
     .streamlit-expanderHeader {{
         background-color: {DesignSystem.SIDEBAR_BG};
@@ -327,19 +308,14 @@ PROFESSIONAL_CSS = f"""
         background: {DesignSystem.SIDEBAR_BG};
     }}
 
-    /* Share link styling */
-    .share-link {{
-        background: #F0F9FF;
-        border: 1px solid {DesignSystem.PRIMARY_BLUE};
-        border-radius: 0.5rem;
-        padding: 0.75rem;
+    /* Charts Container */
+    .chart-container {{
+        background: {DesignSystem.CARD_BG};
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         margin: 1rem 0;
-        font-family: monospace;
-        font-size: 0.875rem;
-        color: {DesignSystem.TEXT_PRIMARY};
-        word-break: break-all;
     }}
-
 </style>
 """
 
@@ -401,8 +377,7 @@ def is_mutually_exclusive_question(question: Dict) -> bool:
         return False
 
 def create_chart(question: Dict, segments: List[str], mode: str = "pct",
-                chart_type: str = "bar", show_total: bool = False,
-                selected_responses: Optional[List[str]] = None) -> go.Figure:
+                chart_type: str = "bar", show_total: bool = False) -> go.Figure:
     """Create a chart with professional styling."""
 
     fig = go.Figure()
@@ -411,16 +386,13 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
     all_data = []
     for segment in segments:
         data = get_segment_data(question, segment, mode)
-        # Filter by selected responses if provided
-        if selected_responses is not None:
-            data = [(opt, val) for opt, val in data if opt in selected_responses]
         all_data.append((segment, data))
 
     if not all_data or not all_data[0][1]:
         return fig
 
-    # Get x values from first segment - ensure they're strings
-    x_values = [str(d[0]) for d in all_data[0][1]]
+    # Get x values from first segment
+    x_values = [d[0] for d in all_data[0][1]]
 
     if chart_type == "pie" and len(segments) == 1:
         # Pie chart
@@ -476,9 +448,6 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
         # Add total if requested
         if show_total and "Total" not in segments:
             total_data = get_segment_data(question, "Total", mode)
-            # Filter by selected responses if provided
-            if selected_responses is not None:
-                total_data = [(opt, val) for opt, val in total_data if opt in selected_responses]
             y_values_total = [d[1] for d in total_data]
 
             fig.add_trace(go.Bar(
@@ -502,8 +471,7 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
             barmode='group',
             xaxis=dict(
                 tickangle=-45 if len(x_values) > 8 else 0,
-                tickfont=dict(size=11, color=DesignSystem.TEXT_PRIMARY),
-                type='category'  # Force categorical x-axis
+                tickfont=dict(size=11, color=DesignSystem.TEXT_PRIMARY)
             ),
             yaxis=dict(
                 range=[0, min(max_val * 1.15, 105) if mode == "pct" else max_val * 1.15],
@@ -548,9 +516,9 @@ def create_data_table(question: Dict, segments: List[str]) -> pd.DataFrame:
 
         for segment in segments:
             if "pct" in response and segment in response["pct"]:
-                row[f"{segment} %"] = response['pct'][segment]  # Keep as float for filtering
+                row[f"{segment} %"] = f"{response['pct'][segment]:.1f}%"
             if "count" in response and segment in response["count"]:
-                row[f"{segment} n"] = int(response['count'][segment])
+                row[f"{segment} n"] = f"{int(response['count'][segment]):,}"
 
         rows.append(row)
 
@@ -563,28 +531,24 @@ def main():
     # Load data
     data = load_data()
 
+    # Main header
+    st.markdown("""
+        <h1 style='text-align: center; color: #1E293B; margin-bottom: 0.5rem;'>
+            ✈️ Hopper Survey Explorer
+        </h1>
+        <p style='text-align: center; color: #64748B; margin-bottom: 2rem;'>
+            Travel Flexibility Survey Analysis | n=1,030 US Adults
+        </p>
+    """, unsafe_allow_html=True)
+
     # Sidebar
     with st.sidebar:
-        # App title and controls header
+        # Logo/Title area
         st.markdown("""
-            <div style='padding: 0.5rem 0; border-bottom: 1px solid #E2E8F0; margin-bottom: 1.5rem;'>
-                <h2 style='color: #1E293B; margin: 0 0 0.5rem 0; font-size: 1.25rem;'>HTS Survey Explorer</h2>
-                <h3 style='color: #198CEC; margin: 0; text-align: left; font-size: 1rem;'>📊 Controls</h3>
+            <div style='text-align: center; padding: 1rem 0; border-bottom: 1px solid #E2E8F0; margin-bottom: 1.5rem;'>
+                <h2 style='color: #198CEC; margin: 0;'>📊 Controls</h2>
             </div>
         """, unsafe_allow_html=True)
-
-        # Region Selection (preparing for future expansion)
-        st.markdown('<div class="section-header">REGION</div>', unsafe_allow_html=True)
-        region = st.selectbox(
-            "Select Region",
-            options=["United States"],
-            label_visibility="collapsed",
-            help="More regions coming soon"
-        )
-
-        # Display region-specific info
-        if region == "United States":
-            st.caption("n=1,030 US Adults who flew in past 12 months")
 
         # Group questions by product category
         question_groups = {
@@ -596,8 +560,7 @@ def main():
 
         for idx, q in enumerate(data):
             sheet = q['sheet']
-            # Show full question text without truncation
-            formatted = f"{sheet}: {q['question']}"
+            formatted = f"{sheet}: {q['question'][:50]}..."
 
             if sheet.startswith('P'):
                 question_groups["Profile Questions"].append((idx, formatted, sheet))
@@ -615,7 +578,7 @@ def main():
         # Product Category Selection
         st.markdown('<div class="section-header">PRODUCT CATEGORY</div>', unsafe_allow_html=True)
         selected_group = st.selectbox(
-            "Product Category",
+            "",
             options=list(question_groups.keys()),
             index=0,
             label_visibility="collapsed"
@@ -627,7 +590,7 @@ def main():
 
         if question_options:
             selected_question_idx = st.selectbox(
-                "Question",
+                "",
                 options=[idx for idx, _, _ in question_options],
                 format_func=lambda x: next((label for idx, label, _ in question_options if idx == x), ""),
                 label_visibility="collapsed"
@@ -677,46 +640,21 @@ def main():
                 show_total = st.checkbox("Include Total", value=False)
 
         else:  # Compare Across Groups
-            st.markdown("**Select two segments from any groups to compare:**")
             col1, col2 = st.columns(2)
             segments = []
-
             with col1:
-                st.markdown("##### First Segment")
-                group_a = st.selectbox(
-                    "Select Group",
-                    list(demographic_groups.keys()),
-                    key="group_a"
-                )
-                segment_a = st.selectbox(
-                    "Select Segment from Group",
-                    demographic_groups.get(group_a, []),
-                    key="seg_a",
-                    help=f"Choose a segment from {group_a}"
-                )
+                st.markdown("**Segment A**")
+                group_a = st.selectbox("Group", list(demographic_groups.keys()), key="group_a")
+                segment_a = st.selectbox("Segment", demographic_groups.get(group_a, []), key="seg_a")
                 if segment_a:
                     segments.append(segment_a)
-
             with col2:
-                st.markdown("##### Second Segment")
-                group_b = st.selectbox(
-                    "Select Group",
-                    list(demographic_groups.keys()),
-                    key="group_b",
-                    index=1 if len(demographic_groups.keys()) > 1 else 0
-                )
-                segment_b = st.selectbox(
-                    "Select Segment from Group",
-                    demographic_groups.get(group_b, []),
-                    key="seg_b",
-                    help=f"Choose a segment from {group_b}"
-                )
+                st.markdown("**Segment B**")
+                group_b = st.selectbox("Group ", list(demographic_groups.keys()), key="group_b")
+                segment_b = st.selectbox("Segment ", demographic_groups.get(group_b, []), key="seg_b")
                 if segment_b:
                     segments.append(segment_b)
-
             selected_segments = segments
-            if len(segments) == 2:
-                st.info(f"Comparing: **{segments[0]}** vs **{segments[1]}**")
             show_total = st.checkbox("Include Total", value=False)
 
         st.markdown("---")
@@ -739,6 +677,18 @@ def main():
                 options=["Bar Chart", "Pie Chart"],
                 horizontal=True
             ).lower().split()[0]
+
+        # Footer
+        st.markdown("""
+            <div style='margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #E2E8F0;'>
+                <p style='font-size: 0.75rem; color: #94A3B8; text-align: center;'>
+                    <strong>Survey Details</strong><br>
+                    n=1,030 US Adults<br>
+                    Flew in past 12 months<br>
+                    © 2024 Hopper
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
 
     # Main Content Area
     col1, col2, col3 = st.columns([1, 6, 1])
@@ -765,180 +715,76 @@ def main():
         if selected_segments:
             stats_html = "<div style='margin: 1rem 0;'>"
             for seg in selected_segments[:5]:  # Limit to 5 segments
-                base_n = current_question["bases"].get(seg, 0)
-                stats_html += f'<span class="stat-badge">{seg}: n={base_n:,}</span>'
+                n = current_question["bases"].get(seg, 0)
+                stats_html += f'<span class="stat-badge">{seg}: n={n:,}</span>'
             stats_html += "</div>"
             st.markdown(stats_html, unsafe_allow_html=True)
 
-            # Create data table
-            df = create_data_table(current_question, selected_segments)
-            all_responses = df["Response"].tolist()
+        # Chart
+        if selected_segments:
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 
-            # Initialize hidden responses in session state if not exists
-            if 'hidden_responses' not in st.session_state:
-                st.session_state.hidden_responses = set()
+            fig = create_chart(
+                current_question,
+                selected_segments,
+                mode,
+                chart_type,
+                show_total
+            )
 
-            # Filter responses for chart (show all by default, except hidden)
-            selected_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
+            st.plotly_chart(
+                fig,
+                use_container_width=True,
+                config={'displayModeBar': False}
+            )
 
-            # Show status if responses are hidden
-            if st.session_state.hidden_responses:
-                st.info(f"📊 Showing {len(selected_responses)} of {len(all_responses)} responses ({len(st.session_state.hidden_responses)} hidden)")
-
-            # Chart (display first)
-            if selected_responses:
-                fig = create_chart(
-                    current_question,
-                    selected_segments,
-                    mode,
-                    chart_type,
-                    show_total,
-                    selected_responses
-                )
-
-                st.plotly_chart(
-                    fig,
-                    use_container_width=True,
-                    config={'displayModeBar': False}
-                )
-
-            # Quick hide options below chart
-            st.markdown("---")
-            st.markdown("**Quick Hide Options:**")
-
-            # Use full width columns for better alignment
-            col_hide1, col_hide2, col_hide3 = st.columns(3)
-
-            with col_hide1:
-                # Check for NET responses (including "NET:" format)
-                net_responses = [r for r in all_responses if 'net:' in r.lower() or 'net ' in r.lower() or 'total' in r.lower() or r.lower().startswith('net')]
-                if net_responses:
-                    if st.button(f"Hide NET/Total ({len(net_responses)})", key=f"hide_net_{current_question['sheet']}"):
-                        for resp in net_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
-
-            with col_hide2:
-                # Check for Don't Know / Not Sure responses
-                dk_responses = [r for r in all_responses if any(x in r.lower() for x in ["don't know", "not sure", "no opinion", "n/a"])]
-                if dk_responses:
-                    if st.button(f"Hide DK/NA ({len(dk_responses)})", key=f"hide_dk_{current_question['sheet']}"):
-                        for resp in dk_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
-
-            with col_hide3:
-                # Check for Other responses - aligned left
-                other_responses = [r for r in all_responses if 'other' in r.lower()]
-                if other_responses:
-                    if st.button(f"Hide Other ({len(other_responses)})", key=f"hide_other_{current_question['sheet']}"):
-                        for resp in other_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
-
-            # Allow custom exclusions
-            with st.expander("🚫 Hide Specific Responses"):
-                st.markdown("**Select responses to HIDE from chart:**")
-
-                # Get currently visible responses
-                visible_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
-
-                # Dropdown to select and hide individual responses
-                if visible_responses:
-                    response_to_hide = st.selectbox(
-                        "Select a response to hide:",
-                        options=["-- Select response --"] + visible_responses,
-                        key=f"select_hide_{current_question['sheet']}"
-                    )
-
-                    if response_to_hide != "-- Select response --":
-                        if st.button(f"Hide '{response_to_hide}'", key=f"hide_btn_{response_to_hide}"):
-                            st.session_state.hidden_responses.add(response_to_hide)
-                            st.rerun()
-
-                # Show what's currently hidden
-                if st.session_state.hidden_responses:
-                    st.markdown("**Currently hidden:**")
-                    for hidden in st.session_state.hidden_responses:
-                        col1, col2 = st.columns([3, 1])
-                        with col1:
-                            st.caption(f"• {hidden}")
-                        with col2:
-                            if st.button("Show", key=f"show_{hidden}"):
-                                st.session_state.hidden_responses.discard(hidden)
-                                st.rerun()
-
-                # Clear all button
-                if st.session_state.hidden_responses:
-                    if st.button("Show All Hidden Responses"):
-                        st.session_state.hidden_responses.clear()
-                        st.rerun()
-
-            # Data table below hiding options
-            with st.expander("📊 View Data Table"):
-                # Show filtered data table
-                if selected_responses:
-                    filtered_df = df[df["Response"].isin(selected_responses)]
-
-                    # Format percentage columns for display
-                    display_df = filtered_df.copy()
-                    for col in display_df.columns:
-                        if " %" in col:
-                            display_df[col] = display_df[col].apply(lambda x: f"{x:.1f}%")
-
-                    st.dataframe(
-                        display_df,
-                        use_container_width=True,
-                        hide_index=True
-                    )
-                else:
-                    st.warning("All responses are hidden. Please show at least one response.")
+            st.markdown('</div>', unsafe_allow_html=True)
 
             # Export Options
-            st.markdown("---")
-            st.markdown("**Export Chart:**")
-            col1_export, col2_export, col3_export = st.columns([1.5, 1.5, 3])
+            col1, col2, col3 = st.columns([1, 1, 4])
 
             sheet_id = current_question["sheet"].lower()
             segment_label = "_".join([s.lower().replace(" ", "_")[:10] for s in selected_segments[:2]])
 
-            with col1_export:
+            with col1:
                 html_string = fig.to_html(include_plotlyjs='cdn')
                 st.download_button(
-                    "📄 Download HTML",
+                    "📄 Export HTML",
                     data=html_string,
-                    file_name=f"hts_{sheet_id}_{segment_label}.html",
-                    mime="text/html",
-                    use_container_width=True
+                    file_name=f"hopper_{sheet_id}_{segment_label}.html",
+                    mime="text/html"
                 )
 
-            with col2_export:
-                # Try PNG export with better error handling
-                try:
-                    img_bytes = fig.to_image(format="png", width=1400, height=700, scale=2)
-                    st.download_button(
-                        "🖼️ Download PNG",
-                        data=img_bytes,
-                        file_name=f"hts_{sheet_id}_{segment_label}.png",
-                        mime="image/png",
-                        use_container_width=True
-                    )
-                except Exception:
-                    # Fallback to JPEG
+            with col2:
+                if check_kaleido():
                     try:
-                        img_bytes = fig.to_image(format="jpeg", width=1400, height=700, scale=2)
+                        img_bytes = fig.to_image(format="png", width=1400, height=700, scale=2)
                         st.download_button(
-                            "🖼️ Download JPEG",
+                            "🖼️ Export PNG",
                             data=img_bytes,
-                            file_name=f"hts_{sheet_id}_{segment_label}.jpg",
-                            mime="image/jpeg",
-                            use_container_width=True
+                            file_name=f"hopper_{sheet_id}_{segment_label}.png",
+                            mime="image/png"
                         )
                     except:
-                        st.info("💡 Use HTML export for images", icon="ℹ️")
+                        pass
 
+            # Data Table
+            with st.expander("📊 View Data Table"):
+                df = create_data_table(current_question, selected_segments)
+                st.dataframe(
+                    df,
+                    use_container_width=True,
+                    hide_index=True
+                )
         else:
             st.info("Please select at least one segment to analyze")
+
+        # Footer
+        st.markdown("""
+            <div class="app-footer">
+                <p>Hopper Survey Explorer • Professional Analytics Dashboard</p>
+            </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

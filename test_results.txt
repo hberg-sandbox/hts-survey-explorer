@@ -1,0 +1,228 @@
+================================================================================
+TESTING ALL QUESTIONS FOR HIDING FUNCTIONALITY
+================================================================================
+
+[1/36] Question P1: How many flights have you taken in the past 12 mon...
+------------------------------------------------------------
+
+[2/36] Question P2: What is the primary purpose of your air travel?
+------------------------------------------------------------
+
+[3/36] Question P3: Which of the following concerns you most when book...
+------------------------------------------------------------
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[4/36] Question D1: In the past 12 months, which of the following have...
+------------------------------------------------------------
+  ✓ Would hide: 'NET: Experienced a delay' [NET]
+  Summary: 1 NET, 0 DK/NA, 0 Other responses
+
+[5/36] Question D2: How did you first learn about the disruption?
+------------------------------------------------------------
+  ✓ Would hide: 'Other passengers' [Other]
+  ✓ Would hide: 'Other (please specify)' [Other]
+  ✓ Would hide: 'Not sure' [DK/NA]
+  Summary: 0 NET, 1 DK/NA, 2 Other responses
+
+[6/36] Question D3: What did you do to resolve the disruption to your ...
+------------------------------------------------------------
+  ✓ Would hide: 'Looked for alternative flights (including other airlines)' [Other]
+  ✓ Would hide: 'Booked an alternative flight on another airline myself' [Other]
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 3 Other responses
+
+[7/36] Question D4: How long did it take to find a workable solution?
+------------------------------------------------------------
+
+[8/36] Question D5: Overall, how easy or difficult was it to resolve t...
+------------------------------------------------------------
+  ✓ Would hide: 'NET: Easy' [NET]
+  ✓ Would hide: 'NET: Difficult' [NET]
+  Summary: 2 NET, 0 DK/NA, 0 Other responses
+
+[9/36] Question D6: How did the resolution experience make you feel?
+------------------------------------------------------------
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[10/36] Question D7: What made the experience challenging?
+------------------------------------------------------------
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[11/36] Question D8: Did the disruption cause out-of-pocket expenses?
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  Summary: 0 NET, 1 DK/NA, 0 Other responses
+
+[12/36] Question D9: About how much did you spend out of pocket in tota...
+------------------------------------------------------------
+
+[13/36] Question D10: Did you experience any other consequences as the r...
+------------------------------------------------------------
+  ✓ Would hide: 'Other (Please Specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[14/36] Question DA1: Do you plan to take a flight in the next 12 months...
+------------------------------------------------------------
+  ✓ Would hide: 'I’m not sure yet' [DK/NA]
+  Summary: 0 NET, 1 DK/NA, 0 Other responses
+
+[15/36] Question DA2: In the next 12 months, how concerned are you about...
+------------------------------------------------------------
+  ✓ Would hide: 'NET: Concerned' [NET]
+  Summary: 1 NET, 0 DK/NA, 0 Other responses
+
+[16/36] Question DA4: How likely would you be to add an option like this...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  ✓ Would hide: 'NET: Likely' [NET]
+  ✓ Would hide: 'NET: Unlikely' [NET]
+  Summary: 2 NET, 1 DK/NA, 0 Other responses
+
+[17/36] Question DA5: Which TWO benefits would most influence your decis...
+------------------------------------------------------------
+  ✓ Would hide: 'Ability to rebook on another airline' [Other]
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 2 Other responses
+
+[18/36] Question DA6: Would you be more likely to book with a travel bra...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  ✓ Would hide: 'NET: More likely' [NET]
+  ✓ Would hide: 'NET: Less likely' [NET]
+  Summary: 2 NET, 1 DK/NA, 0 Other responses
+
+[19/36] Question F0: In the past 12 months, have you changed or cancele...
+------------------------------------------------------------
+  ✓ Would hide: 'NET: Yes' [NET]
+  Summary: 1 NET, 0 DK/NA, 0 Other responses
+
+[20/36] Question F1: Thinking about your most recent change or cancelat...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  Summary: 0 NET, 1 DK/NA, 0 Other responses
+
+[21/36] Question F2: What was the primary reason?
+------------------------------------------------------------
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[22/36] Question F3: What happened to the value of your original ticket...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  Summary: 0 NET, 1 DK/NA, 0 Other responses
+
+[23/36] Question F4: Did you pay any change/cancelation fees (including...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  Summary: 0 NET, 1 DK/NA, 0 Other responses
+
+[24/36] Question F5: About how much did you pay in fees and/or fare dif...
+------------------------------------------------------------
+
+[25/36] Question F6: How would you describe the experience of changing/...
+------------------------------------------------------------
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[26/36] Question F7: Overall, how easy or difficult was it to change/ca...
+------------------------------------------------------------
+  ✓ Would hide: 'NET: Easy' [NET]
+  ✓ Would hide: 'NET: Difficult' [NET]
+  Summary: 2 NET, 0 DK/NA, 0 Other responses
+
+[27/36] Question F8: What made it difficult (if anything)?
+------------------------------------------------------------
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[28/36] Question F9: When thinking about your upcoming travel, how impo...
+------------------------------------------------------------
+  ✓ Would hide: 'NET: Somewhat or more important' [NET]
+  Summary: 1 NET, 0 DK/NA, 0 Other responses
+
+[29/36] Question F11: How likely would you be to add an option like this...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  ✓ Would hide: 'NET: Likely' [NET]
+  ✓ Would hide: 'NET:Unlikely' [NET]
+  Summary: 2 NET, 1 DK/NA, 0 Other responses
+
+[30/36] Question F12: Which TWO benefits would most influence your decis...
+------------------------------------------------------------
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[31/36] Question F13: Would you be more likely to book with a travel bra...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  ✓ Would hide: 'NET: More likely' [NET]
+  ✓ Would hide: 'NET: Less likely' [NET]
+  Summary: 2 NET, 1 DK/NA, 0 Other responses
+
+[32/36] Question HF1: Do you plan to book a hotel stay in the next 12 mo...
+------------------------------------------------------------
+  ✓ Would hide: 'I’m not sure yet' [DK/NA]
+  Summary: 0 NET, 1 DK/NA, 0 Other responses
+
+[33/36] Question HF2: When thinking about your upcoming travel, how impo...
+------------------------------------------------------------
+  ✓ Would hide: 'NET: Somewhat or more important' [NET]
+  Summary: 1 NET, 0 DK/NA, 0 Other responses
+
+[34/36] Question HF4: How likely would you be to add an option like this...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  ✓ Would hide: 'NET: Likely' [NET]
+  ✓ Would hide: 'NET: Unlikely' [NET]
+  Summary: 2 NET, 1 DK/NA, 0 Other responses
+
+[35/36] Question HF5: Which TWO benefits would most influence your decis...
+------------------------------------------------------------
+  ✓ Would hide: 'Other (please specify)' [Other]
+  Summary: 0 NET, 0 DK/NA, 1 Other responses
+
+[36/36] Question HF6: Would you be more likely to book with a travel bra...
+------------------------------------------------------------
+  ✓ Would hide: 'Not sure' [DK/NA]
+  ✓ Would hide: 'NET: More likely' [NET]
+  ✓ Would hide: 'NET: Less likely' [NET]
+  Summary: 2 NET, 1 DK/NA, 0 Other responses
+
+================================================================================
+OVERALL SUMMARY
+================================================================================
+
+Total responses that would be hidden:
+  - NET/Total: 21 responses
+  - DK/NA: 13 responses
+  - Other: 16 responses
+
+✅ No issues found - all hiding logic appears correct!
+
+================================================================================
+EXAMPLES OF HIDDEN RESPONSES
+================================================================================
+
+NET Examples (first 5):
+  - D1: NET: Experienced a delay
+  - D5: NET: Easy
+  - D5: NET: Difficult
+  - DA2: NET: Concerned
+  - DA4: NET: Likely
+
+DK/NA Examples (first 5):
+  - D2: Not sure
+  - D8: Not sure
+  - DA1: I’m not sure yet
+  - DA4: Not sure
+  - DA6: Not sure
+
+Other Examples (first 5):
+  - P3: Other (please specify)
+  - D2: Other passengers
+  - D2: Other (please specify)
+  - D3: Looked for alternative flights (including other airlines)
+  - D3: Booked an alternative flight on another airline myself

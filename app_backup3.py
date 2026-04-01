@@ -130,56 +130,49 @@ PROFESSIONAL_CSS = f"""
         box-shadow: 0 0 0 3px rgba(25, 140, 236, 0.1) !important;
     }}
 
-    /* Radio Button Styling - Simple and Clean */
+    /* Radio Button Styling */
+    [data-baseweb="radio"] {{
+        color: {DesignSystem.TEXT_PRIMARY} !important;
+    }}
+
     [data-baseweb="radio"] label {{
         color: {DesignSystem.TEXT_PRIMARY} !important;
         font-size: 0.875rem !important;
+        padding: 0.375rem 0 !important;
     }}
 
-    /* Selected radio button - make circle visible */
+    [data-baseweb="radio"] > div:first-child {{
+        background-color: {DesignSystem.BACKGROUND} !important;
+        border: 2px solid #CBD5E1 !important;
+    }}
+
+    [data-baseweb="radio"]:hover > div:first-child {{
+        border-color: {DesignSystem.PRIMARY_BLUE} !important;
+    }}
+
     [data-baseweb="radio"] input:checked ~ div:first-child {{
-        background-color: #000000 !important;
-        border-color: #000000 !important;
+        background-color: {DesignSystem.PRIMARY_BLUE} !important;
+        border-color: {DesignSystem.PRIMARY_BLUE} !important;
     }}
 
-    /* Make selected radio option visible with highlighting */
+    /* Make selected radio option more visible */
     [data-baseweb="radio"][aria-checked="true"] {{
-        background-color: #E8F4FD !important;
+        background-color: #E0F2FE !important;
         padding: 0.25rem 0.5rem !important;
         border-radius: 0.375rem !important;
-        border-left: 3px solid #000000 !important;
+        border-left: 3px solid {DesignSystem.PRIMARY_BLUE} !important;
     }}
 
     [data-baseweb="radio"][aria-checked="true"] label {{
-        color: #000000 !important;
-        font-weight: 700 !important;
+        color: #0C4A6E !important;
+        font-weight: 600 !important;
     }}
 
-    /* Selectbox Dropdown - Show full question text */
-    [data-baseweb="select"] {{
-        max-width: 100% !important;
-    }}
-
-    [data-baseweb="select"] [data-baseweb="menu"] {{
-        max-width: 600px !important;
-        white-space: normal !important;
-    }}
-
-    [data-baseweb="select"] li {{
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        padding: 8px 12px !important;
-        line-height: 1.4 !important;
-    }}
-
-    /* Show full text in dropdown options */
-    div[data-baseweb="popover"] {{
-        max-width: 90vw !important;
-    }}
-
-    div[data-baseweb="popover"] li {{
-        white-space: normal !important;
-        word-wrap: break-word !important;
+    /* Additional styling for radio group container to highlight selection */
+    .stRadio > div[role="radiogroup"] > label[data-baseweb="radio"][aria-checked="true"] {{
+        background-color: #E0F2FE !important;
+        margin-left: -0.5rem !important;
+        padding-left: 0.75rem !important;
     }}
 
     /* Multi-select Styling */
@@ -339,7 +332,6 @@ PROFESSIONAL_CSS = f"""
         color: {DesignSystem.TEXT_PRIMARY};
         word-break: break-all;
     }}
-
 </style>
 """
 
@@ -556,12 +548,28 @@ def create_data_table(question: Dict, segments: List[str]) -> pd.DataFrame:
 
     return pd.DataFrame(rows)
 
+def generate_shareable_link():
+    """Generate a shareable link with current state."""
+    params = st.session_state.get('share_params', {})
+
+    # Get current URL
+    base_url = "http://localhost:8501"
+
+    # Build query string
+    if params:
+        query_string = urlencode(params)
+        return f"{base_url}?{query_string}"
+
+    return base_url
+
 def main():
     # Apply professional CSS
     st.markdown(PROFESSIONAL_CSS, unsafe_allow_html=True)
 
     # Load data
     data = load_data()
+
+    # Remove main header - app starts directly with content
 
     # Sidebar
     with st.sidebar:
@@ -576,7 +584,7 @@ def main():
         # Region Selection (preparing for future expansion)
         st.markdown('<div class="section-header">REGION</div>', unsafe_allow_html=True)
         region = st.selectbox(
-            "Select Region",
+            "",
             options=["United States"],
             label_visibility="collapsed",
             help="More regions coming soon"
@@ -596,8 +604,7 @@ def main():
 
         for idx, q in enumerate(data):
             sheet = q['sheet']
-            # Show full question text without truncation
-            formatted = f"{sheet}: {q['question']}"
+            formatted = f"{sheet}: {q['question'][:50]}..."
 
             if sheet.startswith('P'):
                 question_groups["Profile Questions"].append((idx, formatted, sheet))
@@ -615,7 +622,7 @@ def main():
         # Product Category Selection
         st.markdown('<div class="section-header">PRODUCT CATEGORY</div>', unsafe_allow_html=True)
         selected_group = st.selectbox(
-            "Product Category",
+            "",
             options=list(question_groups.keys()),
             index=0,
             label_visibility="collapsed"
@@ -627,7 +634,7 @@ def main():
 
         if question_options:
             selected_question_idx = st.selectbox(
-                "Question",
+                "",
                 options=[idx for idx, _, _ in question_options],
                 format_func=lambda x: next((label for idx, label, _ in question_options if idx == x), ""),
                 label_visibility="collapsed"
@@ -761,80 +768,52 @@ def main():
         # Question Title
         st.markdown(f"<h2>{current_question['question']}</h2>", unsafe_allow_html=True)
 
-        # Base Statistics
+        # Base Statistics - Fixed to show correct bases
         if selected_segments:
             stats_html = "<div style='margin: 1rem 0;'>"
             for seg in selected_segments[:5]:  # Limit to 5 segments
+                # Get the actual base for each segment
                 base_n = current_question["bases"].get(seg, 0)
                 stats_html += f'<span class="stat-badge">{seg}: n={base_n:,}</span>'
             stats_html += "</div>"
             st.markdown(stats_html, unsafe_allow_html=True)
 
+        # Interactive Data Table with Chart Updates
+        if selected_segments:
             # Create data table
             df = create_data_table(current_question, selected_segments)
             all_responses = df["Response"].tolist()
+
+            # Quick hide options for common exclusions
+            col_hide1, col_hide2, col_hide3 = st.columns([1, 1, 1])
 
             # Initialize hidden responses in session state if not exists
             if 'hidden_responses' not in st.session_state:
                 st.session_state.hidden_responses = set()
 
-            # Filter responses for chart (show all by default, except hidden)
-            selected_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
-
-            # Show status if responses are hidden
-            if st.session_state.hidden_responses:
-                st.info(f"📊 Showing {len(selected_responses)} of {len(all_responses)} responses ({len(st.session_state.hidden_responses)} hidden)")
-
-            # Chart (display first)
-            if selected_responses:
-                fig = create_chart(
-                    current_question,
-                    selected_segments,
-                    mode,
-                    chart_type,
-                    show_total,
-                    selected_responses
-                )
-
-                st.plotly_chart(
-                    fig,
-                    use_container_width=True,
-                    config={'displayModeBar': False}
-                )
-
-            # Quick hide options below chart
-            st.markdown("---")
-            st.markdown("**Quick Hide Options:**")
-
-            # Use full width columns for better alignment
-            col_hide1, col_hide2, col_hide3 = st.columns(3)
-
             with col_hide1:
-                # Check for NET responses (including "NET:" format)
-                net_responses = [r for r in all_responses if 'net:' in r.lower() or 'net ' in r.lower() or 'total' in r.lower() or r.lower().startswith('net')]
-                if net_responses:
-                    if st.button(f"Hide NET/Total ({len(net_responses)})", key=f"hide_net_{current_question['sheet']}"):
-                        for resp in net_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                # Check for NET responses
+                net_responses = [r for r in all_responses if 'net' in r.lower() or 'total' in r.lower()]
+                if net_responses and st.checkbox("Hide NET/Total responses", key="hide_net"):
+                    st.session_state.hidden_responses.update(net_responses)
+                elif net_responses:
+                    st.session_state.hidden_responses -= set(net_responses)
 
             with col_hide2:
                 # Check for Don't Know / Not Sure responses
                 dk_responses = [r for r in all_responses if any(x in r.lower() for x in ["don't know", "not sure", "no opinion", "n/a"])]
-                if dk_responses:
-                    if st.button(f"Hide DK/NA ({len(dk_responses)})", key=f"hide_dk_{current_question['sheet']}"):
-                        for resp in dk_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                if dk_responses and st.checkbox("Hide DK/NA responses", key="hide_dk"):
+                    st.session_state.hidden_responses.update(dk_responses)
+                elif dk_responses:
+                    st.session_state.hidden_responses -= set(dk_responses)
 
             with col_hide3:
-                # Check for Other responses - aligned left
+                # Check for Other responses
                 other_responses = [r for r in all_responses if 'other' in r.lower()]
-                if other_responses:
-                    if st.button(f"Hide Other ({len(other_responses)})", key=f"hide_other_{current_question['sheet']}"):
-                        for resp in other_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                if other_responses and st.checkbox("Hide 'Other' responses", key="hide_other"):
+                    st.session_state.hidden_responses.update(other_responses)
+                elif other_responses:
+                    st.session_state.hidden_responses -= set(other_responses)
 
             # Allow custom exclusions
             with st.expander("🚫 Hide Specific Responses"):
@@ -843,18 +822,18 @@ def main():
                 # Get currently visible responses
                 visible_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
 
-                # Dropdown to select and hide individual responses
-                if visible_responses:
-                    response_to_hide = st.selectbox(
-                        "Select a response to hide:",
-                        options=["-- Select response --"] + visible_responses,
-                        key=f"select_hide_{current_question['sheet']}"
-                    )
+                # Multiselect to hide specific items
+                responses_to_hide = st.multiselect(
+                    "Click responses to hide them",
+                    options=visible_responses,
+                    default=[],
+                    key="hide_specific",
+                    help="Select any responses you want to remove from the chart"
+                )
 
-                    if response_to_hide != "-- Select response --":
-                        if st.button(f"Hide '{response_to_hide}'", key=f"hide_btn_{response_to_hide}"):
-                            st.session_state.hidden_responses.add(response_to_hide)
-                            st.rerun()
+                # Update hidden responses
+                if responses_to_hide:
+                    st.session_state.hidden_responses.update(responses_to_hide)
 
                 # Show what's currently hidden
                 if st.session_state.hidden_responses:
@@ -874,7 +853,10 @@ def main():
                         st.session_state.hidden_responses.clear()
                         st.rerun()
 
-            # Data table below hiding options
+            # Filter responses for chart
+            selected_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
+
+            # Show data table (optional)
             with st.expander("📊 View Data Table"):
                 # Show filtered data table
                 if selected_responses:
@@ -894,49 +876,90 @@ def main():
                 else:
                     st.warning("All responses are hidden. Please show at least one response.")
 
-            # Export Options
-            st.markdown("---")
-            st.markdown("**Export Chart:**")
-            col1_export, col2_export, col3_export = st.columns([1.5, 1.5, 3])
-
-            sheet_id = current_question["sheet"].lower()
-            segment_label = "_".join([s.lower().replace(" ", "_")[:10] for s in selected_segments[:2]])
-
-            with col1_export:
-                html_string = fig.to_html(include_plotlyjs='cdn')
-                st.download_button(
-                    "📄 Download HTML",
-                    data=html_string,
-                    file_name=f"hts_{sheet_id}_{segment_label}.html",
-                    mime="text/html",
-                    use_container_width=True
+            # Chart (updated based on visible responses)
+            if selected_responses:
+                fig = create_chart(
+                    current_question,
+                    selected_segments,
+                    mode,
+                    chart_type,
+                    show_total,
+                    selected_responses  # Pass selected responses to filter chart
                 )
 
-            with col2_export:
-                # Try PNG export with better error handling
-                try:
-                    img_bytes = fig.to_image(format="png", width=1400, height=700, scale=2)
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True,
+                    config={'displayModeBar': False}
+                )
+
+                # Share Link
+                col1_share, col2_share = st.columns([3, 1])
+                with col1_share:
+                    share_url = st.text_input(
+                        "Share this view:",
+                        value=generate_shareable_link(),
+                        disabled=True,
+                        help="Copy this link to share the current view with colleagues"
+                    )
+                with col2_share:
+                    st.button("📋 Copy Link", help="Copy link to clipboard")
+
+                # Export Options
+                st.markdown("**Export Chart:**")
+                col1, col2, col3 = st.columns([1.5, 1.5, 3])
+
+                sheet_id = current_question["sheet"].lower()
+                segment_label = "_".join([s.lower().replace(" ", "_")[:10] for s in selected_segments[:2]])
+
+                with col1:
+                    html_string = fig.to_html(include_plotlyjs='cdn')
                     st.download_button(
-                        "🖼️ Download PNG",
-                        data=img_bytes,
-                        file_name=f"hts_{sheet_id}_{segment_label}.png",
-                        mime="image/png",
+                        "📄 Download HTML",
+                        data=html_string,
+                        file_name=f"hts_{sheet_id}_{segment_label}.html",
+                        mime="text/html",
                         use_container_width=True
                     )
-                except Exception:
-                    # Fallback to JPEG
+
+                with col2:
+                    # Try PNG export with better error handling
                     try:
-                        img_bytes = fig.to_image(format="jpeg", width=1400, height=700, scale=2)
+                        # Attempt PNG export with timeout
+                        with st.spinner("Generating PNG..."):
+                            img_bytes = fig.to_image(
+                                format="png",
+                                width=1400,
+                                height=700,
+                                scale=2,
+                                engine="kaleido"
+                            )
                         st.download_button(
-                            "🖼️ Download JPEG",
+                            "🖼️ Download PNG",
                             data=img_bytes,
-                            file_name=f"hts_{sheet_id}_{segment_label}.jpg",
-                            mime="image/jpeg",
+                            file_name=f"hts_{sheet_id}_{segment_label}.png",
+                            mime="image/png",
                             use_container_width=True
                         )
-                    except:
-                        st.info("💡 Use HTML export for images", icon="ℹ️")
-
+                    except Exception as e:
+                        # Fallback to JPEG
+                        try:
+                            img_bytes = fig.to_image(
+                                format="jpeg",
+                                width=1400,
+                                height=700,
+                                scale=2
+                            )
+                            st.download_button(
+                                "🖼️ Download JPEG",
+                                data=img_bytes,
+                                file_name=f"hts_{sheet_id}_{segment_label}.jpg",
+                                mime="image/jpeg",
+                                use_container_width=True
+                            )
+                        except:
+                            # Final fallback - interactive HTML
+                            st.info("💡 Use HTML export for images", icon="ℹ️")
         else:
             st.info("Please select at least one segment to analyze")
 
