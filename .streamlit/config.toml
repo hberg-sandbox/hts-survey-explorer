@@ -1,0 +1,21 @@
+[theme]
+# Primary brand color - Hopper Blue
+primaryColor = "#198CEC"
+
+# Background colors
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F7FA"
+
+# Text colors
+textColor = "#1E293B"
+
+# Font
+font = "sans serif"
+
+[server]
+# Performance settings
+maxUploadSize = 200
+maxMessageSize = 200
+
+[browser]
+gatherUsageStats = false
