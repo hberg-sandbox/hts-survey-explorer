@@ -1,0 +1,46 @@
+# Union AI Deployment Configuration
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hts-survey-explorer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hts-survey-explorer
+  template:
+    metadata:
+      labels:
+        app: hts-survey-explorer
+    spec:
+      containers:
+      - name: streamlit-app
+        image: YOUR_REGISTRY/hts-survey-explorer:latest
+        ports:
+        - containerPort: 8501
+        env:
+        - name: STREAMLIT_SERVER_PORT
+          value: "8501"
+        - name: STREAMLIT_SERVER_ADDRESS
+          value: "0.0.0.0"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hts-survey-explorer-service
+spec:
+  selector:
+    app: hts-survey-explorer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8501
+  type: LoadBalancer
