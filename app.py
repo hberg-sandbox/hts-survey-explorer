@@ -468,11 +468,22 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
         for idx, (segment_name, segment_data) in enumerate(all_data):
             y_values = [d[1] for d in segment_data]
 
+            # Check which responses are NET responses
+            original_labels = [d[0] for d in segment_data]
+
+            # Create color array - black for NET responses, regular color for others
+            colors = []
+            for label in original_labels:
+                if str(label).upper().startswith('NET:'):
+                    colors.append('black')
+                else:
+                    colors.append(DesignSystem.CHART_COLORS[idx % len(DesignSystem.CHART_COLORS)])
+
             fig.add_trace(go.Bar(
                 x=x_values,
                 y=y_values,
                 name=segment_name,
-                marker_color=DesignSystem.CHART_COLORS[idx % len(DesignSystem.CHART_COLORS)],
+                marker_color=colors,
                 text=[f"{v:.1f}%" if mode == "pct" else f"{int(v):,}" for v in y_values],
                 textposition='outside',
                 textfont=dict(size=11, color=DesignSystem.TEXT_PRIMARY),

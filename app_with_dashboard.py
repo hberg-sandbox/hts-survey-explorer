@@ -468,11 +468,22 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
         for idx, (segment_name, segment_data) in enumerate(all_data):
             y_values = [d[1] for d in segment_data]
 
+            # Check which responses are NET responses
+            original_labels = [d[0] for d in segment_data]
+
+            # Create color array - black for NET responses, regular color for others
+            colors = []
+            for label in original_labels:
+                if str(label).upper().startswith('NET:'):
+                    colors.append('black')
+                else:
+                    colors.append(DesignSystem.CHART_COLORS[idx % len(DesignSystem.CHART_COLORS)])
+
             fig.add_trace(go.Bar(
                 x=x_values,
                 y=y_values,
                 name=segment_name,
-                marker_color=DesignSystem.CHART_COLORS[idx % len(DesignSystem.CHART_COLORS)],
+                marker_color=colors,
                 text=[f"{v:.1f}%" if mode == "pct" else f"{int(v):,}" for v in y_values],
                 textposition='outside',
                 textfont=dict(size=11, color=DesignSystem.TEXT_PRIMARY),
@@ -665,7 +676,7 @@ def main():
             st.caption(f"Showing {len(current_questions)} questions from {selected_group}")
 
         # Extract demographic groups
-        demographic_groups = extract_demographic_groups(current_question)
+        demographic_groups = extract_demographic_groups(current_questions[0])
 
         st.markdown("---")
 
@@ -774,97 +785,97 @@ def main():
         current_question = current_questions[0]
 
         with col2:
-        # Category Badge
-        sheet = current_question["sheet"]
-        if sheet.startswith('D') or sheet.startswith('DA'):
-            badge_html = '<span class="category-badge category-disruption">DISRUPTION</span>'
-        elif sheet.startswith('F'):
-            badge_html = '<span class="category-badge category-air">AIR FLEXIBILITY</span>'
-        elif sheet.startswith('HF'):
-            badge_html = '<span class="category-badge category-hotel">HOTEL FLEXIBILITY</span>'
-        else:
-            badge_html = ''
+            # Category Badge
+            sheet = current_question["sheet"]
+            if sheet.startswith('D') or sheet.startswith('DA'):
+                badge_html = '<span class="category-badge category-disruption">DISRUPTION</span>'
+            elif sheet.startswith('F'):
+                badge_html = '<span class="category-badge category-air">AIR FLEXIBILITY</span>'
+            elif sheet.startswith('HF'):
+                badge_html = '<span class="category-badge category-hotel">HOTEL FLEXIBILITY</span>'
+            else:
+                badge_html = ''
 
-        if badge_html:
-            st.markdown(badge_html, unsafe_allow_html=True)
+            if badge_html:
+                st.markdown(badge_html, unsafe_allow_html=True)
 
-        # Question Title
-        st.markdown(f"<h2>{current_question['question']}</h2>", unsafe_allow_html=True)
+            # Question Title
+            st.markdown(f"<h2>{current_question['question']}</h2>", unsafe_allow_html=True)
 
-        # Base Statistics
-        if selected_segments:
-            stats_html = "<div style='margin: 1rem 0;'>"
-            for seg in selected_segments[:5]:  # Limit to 5 segments
-                base_n = current_question["bases"].get(seg, 0)
-                stats_html += f'<span class="stat-badge">{seg}: n={base_n:,}</span>'
-            stats_html += "</div>"
-            st.markdown(stats_html, unsafe_allow_html=True)
+            # Base Statistics
+            if selected_segments:
+                stats_html = "<div style='margin: 1rem 0;'>"
+                for seg in selected_segments[:5]:  # Limit to 5 segments
+                    base_n = current_question["bases"].get(seg, 0)
+                    stats_html += f'<span class="stat-badge">{seg}: n={base_n:,}</span>'
+                stats_html += "</div>"
+                st.markdown(stats_html, unsafe_allow_html=True)
 
-            # Create data table
-            df = create_data_table(current_question, selected_segments)
-            all_responses = df["Response"].tolist()
+                # Create data table
+                df = create_data_table(current_question, selected_segments)
+                all_responses = df["Response"].tolist()
 
-            # Initialize hidden responses in session state if not exists
-            if 'hidden_responses' not in st.session_state:
-                st.session_state.hidden_responses = set()
+                # Initialize hidden responses in session state if not exists
+                if 'hidden_responses' not in st.session_state:
+                    st.session_state.hidden_responses = set()
 
-            # Filter responses for chart (show all by default, except hidden)
-            selected_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
+                # Filter responses for chart (show all by default, except hidden)
+                selected_responses = [r for r in all_responses if r not in st.session_state.hidden_responses]
 
-            # Show status if responses are hidden
-            if st.session_state.hidden_responses:
-                st.info(f"📊 Showing {len(selected_responses)} of {len(all_responses)} responses ({len(st.session_state.hidden_responses)} hidden)")
+                # Show status if responses are hidden
+                if st.session_state.hidden_responses:
+                    st.info(f"📊 Showing {len(selected_responses)} of {len(all_responses)} responses ({len(st.session_state.hidden_responses)} hidden)")
 
-            # Chart (display first)
-            if selected_responses:
-                fig = create_chart(
-                    current_question,
-                    selected_segments,
-                    mode,
-                    chart_type,
-                    show_total,
-                    selected_responses
-                )
+                # Chart (display first)
+                if selected_responses:
+                    fig = create_chart(
+                        current_question,
+                        selected_segments,
+                        mode,
+                        chart_type,
+                        show_total,
+                        selected_responses
+                    )
 
-                st.plotly_chart(
-                    fig,
-                    use_container_width=True,
-                    config={'displayModeBar': False}
-                )
+                    st.plotly_chart(
+                        fig,
+                        use_container_width=True,
+                        config={'displayModeBar': False}
+                    )
 
-            # Quick hide options below chart
-            st.markdown("---")
-            st.markdown("**Quick Hide Options:**")
+                # Quick hide options below chart
+                st.markdown("---")
+                st.markdown("**Quick Hide Options:**")
 
-            # Use full width columns for better alignment
-            col_hide1, col_hide2, col_hide3 = st.columns(3)
+                # Use full width columns for better alignment
+                col_hide1, col_hide2, col_hide3 = st.columns(3)
 
-            with col_hide1:
-                # Check for NET responses (including "NET:" format)
-                net_responses = [r for r in all_responses if 'net:' in r.lower() or 'net ' in r.lower() or 'total' in r.lower() or r.lower().startswith('net')]
-                if net_responses:
-                    if st.button(f"Hide NET/Total ({len(net_responses)})", key=f"hide_net_{current_question['sheet']}"):
-                        for resp in net_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                with col_hide1:
+                    # Check for NET responses (including "NET:" format)
+                    net_responses = [r for r in all_responses if 'net:' in r.lower() or 'net ' in r.lower() or 'total' in r.lower() or r.lower().startswith('net')]
+                    if net_responses:
+                        if st.button(f"Hide NET/Total ({len(net_responses)})", key=f"hide_net_{current_question['sheet']}"):
+                            for resp in net_responses:
+                                st.session_state.hidden_responses.add(resp)
+                            st.rerun()
 
-            with col_hide2:
-                # Check for Don't Know / Not Sure responses
-                dk_responses = [r for r in all_responses if any(x in r.lower() for x in ["don't know", "not sure", "no opinion", "n/a"])]
-                if dk_responses:
-                    if st.button(f"Hide DK/NA ({len(dk_responses)})", key=f"hide_dk_{current_question['sheet']}"):
-                        for resp in dk_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                with col_hide2:
+                    # Check for Don't Know / Not Sure responses
+                    dk_responses = [r for r in all_responses if any(x in r.lower() for x in ["don't know", "not sure", "no opinion", "n/a"])]
+                    if dk_responses:
+                        if st.button(f"Hide DK/NA ({len(dk_responses)})", key=f"hide_dk_{current_question['sheet']}"):
+                            for resp in dk_responses:
+                                st.session_state.hidden_responses.add(resp)
+                            st.rerun()
 
-            with col_hide3:
-                # Check for Other responses - aligned left
-                other_responses = [r for r in all_responses if 'other' in r.lower()]
-                if other_responses:
-                    if st.button(f"Hide Other ({len(other_responses)})", key=f"hide_other_{current_question['sheet']}"):
-                        for resp in other_responses:
-                            st.session_state.hidden_responses.add(resp)
-                        st.rerun()
+                with col_hide3:
+                    # Check for Other responses - aligned left
+                    other_responses = [r for r in all_responses if 'other' in r.lower()]
+                    if other_responses:
+                        if st.button(f"Hide Other ({len(other_responses)})", key=f"hide_other_{current_question['sheet']}"):
+                            for resp in other_responses:
+                                st.session_state.hidden_responses.add(resp)
+                            st.rerun()
 
             # Allow custom exclusions
             with st.expander("🚫 Hide Specific Responses"):
@@ -967,8 +978,9 @@ def main():
                     except:
                         st.info("💡 Use HTML export for images", icon="ℹ️")
 
-        else:
-            st.info("Please select at least one segment to analyze")
+            with col3_export:
+                # Empty column for spacing
+                pass
 
     else:
         # Dashboard view - show all charts in category
@@ -1049,7 +1061,9 @@ def main():
                     )
 
                     # Sample sizes
-                    st.caption(f"Sample sizes: {', '.join([f'{seg}: n={current_question[\"bases\"].get(seg, \"N/A\")}' for seg in selected_segments[:3]])}")
+                    bases = current_question.get("bases", {})
+                    sample_sizes = [f"{seg}: n={bases.get(seg, 'N/A')}" for seg in selected_segments[:3]]
+                    st.caption(f"Sample sizes: {', '.join(sample_sizes)}")
                 else:
                     st.warning(f"No data to display for {current_question['sheet']}. All responses are hidden.")
 
