@@ -348,6 +348,11 @@ def natural_sort_key(s):
     """Sort strings naturally - F1, F2, F3... not F1, F11, F2"""
     return [int(text) if text.isdigit() else text for text in re.split('([0-9]+)', s)]
 
+def wrap_text(text, width=15):
+    """Wrap text to specified width for better display on charts"""
+    import textwrap
+    return '<br>'.join(textwrap.wrap(str(text), width=width))
+
 # Check for export capabilities
 def check_kaleido():
     try:
@@ -419,8 +424,8 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
     if not all_data or not all_data[0][1]:
         return fig
 
-    # Get x values from first segment - ensure they're strings
-    x_values = [str(d[0]) for d in all_data[0][1]]
+    # Get x values from first segment - wrap long text for better display
+    x_values = [wrap_text(str(d[0]), width=20) for d in all_data[0][1]]
 
     if chart_type == "pie" and len(segments) == 1:
         # Pie chart
@@ -501,9 +506,11 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
         fig.update_layout(
             barmode='group',
             xaxis=dict(
-                tickangle=-45 if len(x_values) > 8 else 0,
-                tickfont=dict(size=11, color=DesignSystem.TEXT_PRIMARY),
-                type='category'  # Force categorical x-axis
+                tickangle=-45 if len(x_values) > 10 else -30 if len(x_values) > 6 else 0,
+                tickfont=dict(size=10, color=DesignSystem.TEXT_PRIMARY),
+                type='category',  # Force categorical x-axis
+                tickmode='linear',
+                automargin=True  # Automatically adjust margins for long labels
             ),
             yaxis=dict(
                 range=[0, min(max_val * 1.15, 105) if mode == "pct" else max_val * 1.15],
@@ -519,7 +526,7 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(family="'Inter', sans-serif", color=DesignSystem.TEXT_PRIMARY),
-        margin=dict(l=60, r=30, t=30, b=60),
+        margin=dict(l=60, r=30, t=30, b=100),
         hoverlabel=dict(
             bgcolor="white",
             font_size=12,
