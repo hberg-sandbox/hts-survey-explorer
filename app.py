@@ -425,12 +425,16 @@ def create_chart(question: Dict, segments: List[str], mode: str = "pct",
         return fig
 
     # Get x values from first segment - wrap long text for better display
-    x_values = [wrap_text(str(d[0]), width=20) for d in all_data[0][1]]
+    # Adjust wrap width based on number of categories
+    num_categories = len(all_data[0][1])
+    wrap_width = 25 if num_categories <= 5 else 20 if num_categories <= 8 else 15 if num_categories <= 12 else 12
+    x_values = [wrap_text(str(d[0]), width=wrap_width) for d in all_data[0][1]]
 
     if chart_type == "pie" and len(segments) == 1:
-        # Pie chart
+        # Pie chart - use more aggressive wrapping for pie slices
+        pie_labels = [wrap_text(str(d[0]), width=15) for d in all_data[0][1]]
         values = [d[1] for d in all_data[0][1]]
-        labels = x_values
+        labels = pie_labels
 
         fig.add_trace(go.Pie(
             labels=labels,
